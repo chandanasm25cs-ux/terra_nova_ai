@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TerraNova AI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{--cyan:#00f5ff;--amber:#ff6b35;--red:#ff2244;--green:#00ff88;--navy:#0a0e1a;--navy2:#0d1526;--glass:rgba(0,245,255,0.05);--glass2:rgba(0,245,255,0.09);--glow:0 0 20px rgba(0,245,255,0.6);--font-head:'Orbitron',monospace;--font-body:'Exo 2',sans-serif;--font-mono:'Share Tech Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--navy);color:#e0f7fa;font-family:var(--font-body);min-height:100vh;cursor:none;overflow-x:hidden;}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--cyan);pointer-events:none;z-index:99999;transform:translate(-50%,-50%);box-shadow:0 0 15px var(--cyan);}
+#cursor-ring{position:fixed;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(0,245,255,0.4);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all .15s;}
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,14,26,.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(0,245,255,.1);}
+.nav-left{display:flex;align-items:center;gap:14px;}
+.nav-orb{width:36px;height:36px;border-radius:50%;border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:.75rem;font-weight:900;color:var(--cyan);box-shadow:var(--glow);animation:orbPulse 2.5s ease-in-out infinite;}
+.nav-title{font-family:var(--font-head);font-size:.9rem;font-weight:700;background:linear-gradient(135deg,var(--cyan),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-time{font-family:var(--font-mono);font-size:.75rem;color:var(--cyan);letter-spacing:2px;}
+.nav-user{display:flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid rgba(0,245,255,.2);border-radius:20px;font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);}
+.nav-logout{padding:6px 16px;border:1px solid rgba(255,107,53,.3);border-radius:4px;color:var(--amber);font-family:var(--font-head);font-size:.65rem;font-weight:600;letter-spacing:1px;background:transparent;cursor:pointer;transition:all .2s;}
+.nav-logout:hover{background:rgba(255,107,53,.1);}
+@keyframes orbPulse{0%,100%{box-shadow:var(--glow);}50%{box-shadow:0 0 35px rgba(0,245,255,.9);}}
+
+/* LAYOUT */
+.dash-body{display:grid;grid-template-columns:280px 1fr 280px;gap:0;min-height:100vh;padding-top:64px;}
+@media(max-width:1100px){.dash-body{grid-template-columns:1fr;}}
+
+/* SIDEBAR LEFT */
+.sidebar{padding:24px 16px;border-right:1px solid rgba(0,245,255,.08);background:rgba(10,14,26,.6);display:flex;flex-direction:column;gap:20px;}
+.sidebar-section{margin-bottom:4px;}
+.sidebar-label{font-family:var(--font-mono);font-size:.62rem;color:rgba(0,245,255,.4);letter-spacing:3px;margin-bottom:10px;padding:0 8px;}
+.sidebar-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);font-size:.82rem;color:rgba(224,247,250,.65);transition:all .2s;border:none;background:transparent;width:100%;text-align:left;}
+.sidebar-btn:hover,.sidebar-btn.active{background:rgba(0,245,255,.08);color:var(--cyan);border-left:2px solid var(--cyan);}
+.sidebar-btn .sb-icon{width:30px;height:30px;border-radius:6px;background:rgba(0,245,255,.08);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+
+/* USER ROLE BOX */
+.role-box{background:linear-gradient(135deg,rgba(0,245,255,.08),rgba(0,245,255,.03));border:1px solid rgba(0,245,255,.2);border-radius:10px;padding:18px;text-align:center;}
+.role-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),#0af);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:1.1rem;font-weight:900;color:#000;margin:0 auto 10px;box-shadow:var(--glow);}
+.role-name{font-family:var(--font-head);font-size:.78rem;font-weight:700;color:#fff;margin-bottom:4px;}
+.role-tag{display:inline-block;padding:3px 10px;background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25);border-radius:10px;font-family:var(--font-mono);font-size:.62rem;color:var(--cyan);letter-spacing:1px;}
+.role-select{width:100%;margin-top:12px;padding:8px;background:rgba(0,245,255,.05);border:1px solid rgba(0,245,255,.15);border-radius:6px;color:var(--cyan);font-family:var(--font-mono);font-size:.7rem;outline:none;cursor:pointer;}
+.role-select option{background:#0d1526;}
+
+/* MAIN CONTENT */
+.dash-main{padding:28px;position:relative;z-index:1;}
+.dash-greeting{margin-bottom:28px;}
+.greeting-tag{font-family:var(--font-mono);font-size:.7rem;color:var(--amber);letter-spacing:3px;display:block;margin-bottom:6px;}
+.greeting-title{font-family:var(--font-head);font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:900;color:#fff;}
+.greeting-sub{font-size:.85rem;color:rgba(224,247,250,.5);margin-top:4px;font-family:var(--font-mono);}
+
+/* STATUS ROW */
+.status-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:800px){.status-row{grid-template-columns:1fr 1fr;}}
+.status-card{background:var(--glass);border:1px solid rgba(0,245,255,.1);border-radius:10px;padding:16px;position:relative;overflow:hidden;transition:all .3s;}
+.status-card:hover{border-color:rgba(0,245,255,.3);transform:translateY(-2px);}
+.status-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
+.sc-label{font-family:var(--font-mono);font-size:.62rem;color:rgba(224,247,250,.4);letter-spacing:2px;margin-bottom:6px;}
+.sc-val{font-family:var(--font-head);font-size:1.4rem;font-weight:900;color:var(--cyan);text-shadow:var(--glow);}
+.sc-sub{font-family:var(--font-mono);font-size:.65rem;color:rgba(0,245,255,.5);margin-top:2px;}
+.sc-dot{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.2s infinite;}
+
+/* DISASTER CARDS */
+.disaster-section-title{font-family:var(--font-head);font-size:.85rem;font-weight:700;color:rgba(224,247,250,.6);letter-spacing:3px;margin-bottom:18px;}
+.disaster-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:28px;}
+@media(max-width:700px){.disaster-cards{grid-template-columns:1fr;}}
+
+.d-card{position:relative;border-radius:12px;overflow:hidden;height:320px;cursor:pointer;border:1px solid rgba(0,245,255,.15);transition:all .4s;}
+.d-card:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(0,0,0,.5);}
+.d-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+.d-card-bg{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;font-size:7rem;}
+.d-scan{position:absolute;left:0;right:0;height:2px;z-index:3;opacity:0;animation:scanLine 3s linear infinite;}
+.d-card:hover .d-scan{opacity:1;}
+@keyframes scanLine{0%{top:0%;}100%{top:100%;}}
+.d-overlay{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;padding:24px;}
+.d-overlay.flood{background:linear-gradient(0deg,rgba(0,60,120,.92),rgba(0,20,60,.4) 60%,transparent);}
+.d-overlay.quake{background:linear-gradient(0deg,rgba(80,20,0,.92),rgba(40,10,0,.4) 60%,transparent);}
+.d-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:12px;font-family:var(--font-mono);font-size:.65rem;letter-spacing:1px;margin-bottom:10px;width:fit-content;}
+.flood-b{background:rgba(0,150,255,.2);border:1px solid rgba(0,200,255,.4);color:#7df;}
+.quake-b{background:rgba(255,100,0,.2);border:1px solid rgba(255,150,50,.4);color:#fda;}
+.bd{width:5px;height:5px;border-radius:50%;animation:blink 1s infinite;}
+.flood-b .bd{background:#7df;}.quake-b .bd{background:#fda;}
+.d-title{font-family:var(--font-head);font-size:1.5rem;font-weight:900;color:#fff;margin-bottom:8px;}
+.d-desc{font-size:.8rem;color:rgba(255,255,255,.65);margin-bottom:14px;line-height:1.5;}
+.d-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:4px;font-family:var(--font-head);font-size:.68rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;transition:all .25s;}
+.flood-btn{background:linear-gradient(135deg,#0af,#06d);color:#fff;box-shadow:0 0 15px rgba(0,170,255,.4);}
+.quake-btn{background:linear-gradient(135deg,var(--amber),#d44);color:#fff;box-shadow:0 0 15px rgba(255,107,53,.4);}
+.d-btn:hover{transform:scale(1.04);}
+.d-facts{position:absolute;top:12px;right:12px;z-index:4;background:rgba(10,14,26,.9);border:1px solid rgba(0,245,255,.2);border-radius:8px;padding:12px;width:180px;opacity:0;transform:scale(.9);transition:all .3s;pointer-events:none;backdrop-filter:blur(10px);}
+.d-card:hover .d-facts{opacity:1;transform:scale(1);}
+.d-facts h4{font-family:var(--font-head);font-size:.6rem;color:var(--cyan);letter-spacing:2px;margin-bottom:8px;}
+.df{font-family:var(--font-mono);font-size:.64rem;color:rgba(224,247,250,.65);padding:3px 0;border-bottom:1px solid rgba(0,245,255,.06);}
+.df::before{content:'› ';color:var(--cyan);}
+
+/* SIDEBAR RIGHT */
+.sidebar-right{padding:24px 16px;border-left:1px solid rgba(0,245,255,.08);background:rgba(10,14,26,.5);display:flex;flex-direction:column;gap:18px;}
+
+/* AI MONITORING FEED */
+.feed-panel{background:var(--glass);border:1px solid rgba(0,245,255,.12);border-radius:10px;padding:16px;height:220px;overflow:hidden;position:relative;}
+.feed-title{font-family:var(--font-head);font-size:.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.feed-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1s infinite;}
+.feed-scroll{display:flex;flex-direction:column;gap:6px;animation:feedScroll 20s linear infinite;}
+.feed-item{font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.6);padding:4px 0;border-bottom:1px solid rgba(0,245,255,.04);display:flex;align-items:center;gap:6px;}
+.feed-item.warn{color:#ffd700;}.feed-item.alert{color:var(--amber);}
+.fi-tag{padding:1px 6px;border-radius:3px;font-size:.55rem;background:rgba(0,245,255,.1);color:var(--cyan);}
+.fi-tag.warn{background:rgba(255,215,0,.1);color:#ffd700;}.fi-tag.alert{background:rgba(255,107,53,.1);color:var(--amber);}
+@keyframes feedScroll{0%{transform:translateY(0);}100%{transform:translateY(-50%);}}
+
+/* TIME PANEL */
+.time-panel{background:var(--glass);border:1px solid rgba(0,245,255,.12);border-radius:10px;padding:16px;text-align:center;}
+.time-display{font-family:var(--font-head);font-size:1.8rem;font-weight:700;color:var(--cyan);text-shadow:var(--glow);letter-spacing:4px;}
+.date-display{font-family:var(--font-mono);font-size:.68rem;color:rgba(224,247,250,.4);letter-spacing:2px;margin-top:4px;}
+
+/* AI VOICE ORB */
+.voice-panel{background:linear-gradient(135deg,rgba(0,245,255,.06),rgba(0,245,255,.02));border:1px solid rgba(0,245,255,.2);border-radius:10px;padding:18px;text-align:center;}
+.voice-title{font-family:var(--font-head);font-size:.65rem;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;}
+.voice-orb{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,rgba(0,245,255,.3),rgba(0,245,255,.05));border:2px solid var(--cyan);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;cursor:pointer;box-shadow:var(--glow),0 0 40px rgba(0,245,255,.15);animation:voicePulse 2s ease-in-out infinite;transition:all .3s;}
+.voice-orb:hover{transform:scale(1.1);box-shadow:0 0 50px rgba(0,245,255,.7);}
+.voice-orb.active{animation:voiceActive .5s ease-in-out infinite alternate;}
+@keyframes voicePulse{0%,100%{box-shadow:var(--glow),0 0 20px rgba(0,245,255,.1);}50%{box-shadow:0 0 30px rgba(0,245,255,.8),0 0 60px rgba(0,245,255,.2);}}
+@keyframes voiceActive{0%{transform:scale(1);}100%{transform:scale(1.15);}}
+.voice-text{font-family:var(--font-mono);font-size:.68rem;color:rgba(224,247,250,.5);min-height:36px;}
+.voice-bars{display:flex;align-items:center;justify-content:center;gap:3px;height:24px;margin-bottom:8px;opacity:0;transition:opacity .3s;}
+.voice-bars.active{opacity:1;}
+.vbar{width:3px;border-radius:2px;background:var(--cyan);animation:barAnim 0.5s ease-in-out infinite alternate;}
+.vbar:nth-child(1){animation-delay:0s;}.vbar:nth-child(2){animation-delay:.1s;}.vbar:nth-child(3){animation-delay:.2s;}
+.vbar:nth-child(4){animation-delay:.15s;}.vbar:nth-child(5){animation-delay:.05s;}
+@keyframes barAnim{0%{height:4px;}100%{height:20px;}}
+
+/* WEATHER */
+.weather-panel{background:var(--glass);border:1px solid rgba(0,245,255,.1);border-radius:10px;padding:16px;}
+.wp-title{font-family:var(--font-head);font-size:.62rem;color:rgba(0,245,255,.5);letter-spacing:2px;margin-bottom:10px;}
+.wp-main{display:flex;align-items:center;gap:12px;}
+.wp-icon{font-size:2rem;}
+.wp-temp{font-family:var(--font-head);font-size:1.6rem;font-weight:900;color:var(--cyan);}
+.wp-info{font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);}
+.wp-location{font-family:var(--font-mono);font-size:.65rem;color:rgba(0,245,255,.5);margin-top:8px;display:flex;align-items:center;gap:4px;}
+
+/* ALERT SYSTEM */
+.alert-bar{position:fixed;bottom:0;left:0;right:0;z-index:600;padding:10px 24px;background:linear-gradient(90deg,rgba(255,34,68,.9),rgba(255,107,53,.9));display:flex;align-items:center;justify-content:space-between;transform:translateY(100%);transition:transform .4s;border-top:1px solid rgba(255,100,100,.5);}
+.alert-bar.show{transform:translateY(0);}
+.alert-text{font-family:var(--font-head);font-size:.75rem;color:#fff;letter-spacing:2px;display:flex;align-items:center;gap:8px;}
+.alert-close{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;font-family:var(--font-mono);font-size:.65rem;padding:4px 12px;border-radius:4px;cursor:pointer;}
+
+/* NOTIF */
+.notif-wrap{position:fixed;top:76px;right:20px;z-index:900;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.notif{background:rgba(10,14,26,.92);border:1px solid rgba(0,245,255,.25);border-radius:8px;padding:12px 18px;font-family:var(--font-mono);font-size:.72rem;color:var(--cyan);backdrop-filter:blur(12px);transform:translateX(120%);transition:transform .4s;max-width:300px;display:flex;align-items:center;gap:8px;}
+.notif.show{transform:translateX(0);}.notif-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow);flex-shrink:0;}
+
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div class="notif-wrap" id="notifWrap"></div>
+<div class="alert-bar" id="alertBar">
+  <div class="alert-text">⚠ EMERGENCY ALERT: Elevated seismic activity detected — Bengaluru region</div>
+  <button class="alert-close" onclick="document.getElementById('alertBar').classList.remove('show')">DISMISS</button>
+</div>
+<canvas id="bg"></canvas>
+
+<nav>
+  <div class="nav-left">
+    <div class="nav-orb">TN</div>
+    <span class="nav-title">TerraNova AI</span>
+    <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(0,245,255,.3);letter-spacing:2px;margin-left:12px;">// DASHBOARD</span>
+  </div>
+  <div class="nav-right">
+    <span class="nav-time" id="navTime">00:00:00</span>
+    <div class="nav-user">👤 <span id="navUser">User</span></div>
+    <button class="nav-logout" onclick="window.location.href='login.html'">LOGOUT</button>
+  </div>
+</nav>
+
+<div class="dash-body">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <div class="role-box">
+      <div class="role-avatar" id="roleAvatar">G</div>
+      <div class="role-name" id="roleName">Welcome Back</div>
+      <div class="role-tag" id="roleTag">SELECT ROLE</div>
+      <select class="role-select" onchange="updateRole(this.value)">
+        <option value="">-- Select your role --</option>
+        <option value="govt">🏛️ Government Official</option>
+        <option value="ngo">🤝 NGO Worker</option>
+        <option value="citizen">👤 Citizen</option>
+        <option value="student">🎓 Student</option>
+        <option value="rescue">🚒 Rescue Team</option>
+        <option value="other">➕ Other</option>
+      </select>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">NAVIGATION</div>
+      <button class="sidebar-btn active"><span class="sb-icon">📊</span> Dashboard</button>
+      <button class="sidebar-btn" onclick="goTo('flood.html')"><span class="sb-icon">🌊</span> Report Flood</button>
+      <button class="sidebar-btn" onclick="goTo('earthquake.html')"><span class="sb-icon">🌍</span> Report Earthquake</button>
+      <button class="sidebar-btn" onclick="goTo('emergency.html')"><span class="sb-icon">🚨</span> Emergency Hub</button>
+      <button class="sidebar-btn" onclick="goTo('index.html')"><span class="sb-icon">🏠</span> Home</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">SYSTEM STATUS</div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:0 8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);">AI Engine</span>
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);">● ONLINE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);">Satellite Feed</span>
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);">● ACTIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);">Flood Sensors</span>
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);">● ACTIVE</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);">Seismic Network</span>
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:#ffd700);">● STANDBY</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.5);">Database</span>
+          <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);">● SYNCED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="dash-main">
+    <div class="dash-greeting">
+      <span class="greeting-tag">// MISSION CONTROL</span>
+      <div class="greeting-title">DISASTER MONITORING CENTER</div>
+      <div class="greeting-sub" id="greeting-sub">Select your role and report a disaster below</div>
+    </div>
+
+    <div class="status-row">
+      <div class="status-card"><div class="sc-dot"></div><div class="sc-label">ACTIVE REPORTS</div><div class="sc-val">24</div><div class="sc-sub">+3 today</div></div>
+      <div class="status-card"><div class="sc-label">FLOOD ALERTS</div><div class="sc-val" style="color:#0af;">7</div><div class="sc-sub">Level 2 active</div></div>
+      <div class="status-card"><div class="sc-label">SEISMIC EVENTS</div><div class="sc-val" style="color:var(--amber);">3</div><div class="sc-sub">Last 24 hrs</div></div>
+      <div class="status-card"><div class="sc-label">RESCUE OPS</div><div class="sc-val" style="color:var(--green);">12</div><div class="sc-sub">In progress</div></div>
+    </div>
+
+    <div class="disaster-section-title">// SELECT DISASTER TYPE TO REPORT</div>
+    <div class="disaster-cards">
+
+      <!-- FLOOD CARD -->
+      <div class="d-card" onclick="goTo('flood.html')">
+        <div class="d-card-bg" style="background:linear-gradient(135deg,#001a3a,#003366,#0066aa);">🌊</div>
+        <!-- To use your video: replace above with <video autoplay muted loop><source src="assets/flood-video.mp4" type="video/mp4"></video> -->
+        <div class="d-scan" style="background:linear-gradient(90deg,transparent,rgba(0,170,255,.8),transparent);"></div>
+        <div class="d-facts">
+          <h4>⚡ FLOOD FACTS</h4>
+          <div class="df">Affects 250M+ people/year</div>
+          <div class="df">AI water-level analysis</div>
+          <div class="df">Satellite flood mapping</div>
+          <div class="df">Click to file a report</div>
+        </div>
+        <div class="d-overlay flood">
+          <span class="d-badge flood-b"><span class="bd"></span>ACTIVE MONITORING</span>
+          <div class="d-title">🌊 FLOOD</div>
+          <p class="d-desc">Report water levels, affected zones, damage photos, and request emergency rescue assistance.</p>
+          <button class="d-btn flood-btn">REPORT NOW ›</button>
+        </div>
+      </div>
+
+      <!-- EARTHQUAKE CARD -->
+      <div class="d-card" onclick="goTo('earthquake.html')">
+        <div class="d-card-bg" style="background:linear-gradient(135deg,#1a0a00,#3d1500,#6b2800);">🌍</div>
+        <!-- To use your video: replace above with <video autoplay muted loop><source src="assets/earthquake-video.mp4" type="video/mp4"></video> -->
+        <div class="d-scan" style="background:linear-gradient(90deg,transparent,rgba(255,107,53,.8),transparent);animation-delay:1.5s;"></div>
+        <div class="d-facts" style="border-color:rgba(255,107,53,.3);">
+          <h4 style="color:var(--amber);">⚡ QUAKE FACTS</h4>
+          <div class="df">500K+ quakes per year</div>
+          <div class="df">Magnitude & intensity AI</div>
+          <div class="df">Structural damage scan</div>
+          <div class="df">Click to file a report</div>
+        </div>
+        <div class="d-overlay quake">
+          <span class="d-badge quake-b"><span class="bd"></span>SEISMIC TRACKING</span>
+          <div class="d-title">🌍 EARTHQUAKE</div>
+          <p class="d-desc">Report seismic damage, magnitude readings, building collapses, and coordinate rescue operations.</p>
+          <button class="d-btn quake-btn">REPORT NOW ›</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button onclick="goTo('emergency.html')" style="padding:10px 22px;background:rgba(255,34,68,.12);border:1px solid rgba(255,34,68,.3);border-radius:6px;color:#ff6688;font-family:var(--font-head);font-size:.68rem;letter-spacing:2px;cursor:pointer;transition:all .2s;">🚨 EMERGENCY HUB</button>
+      <button onclick="document.getElementById('alertBar').classList.add('show')" style="padding:10px 22px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.25);border-radius:6px;color:var(--amber);font-family:var(--font-head);font-size:.68rem;letter-spacing:2px;cursor:pointer;transition:all .2s;">⚠ TEST ALERT</button>
+      <button onclick="goTo('index.html')" style="padding:10px 22px;background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.15);border-radius:6px;color:var(--cyan);font-family:var(--font-head);font-size:.68rem;letter-spacing:2px;cursor:pointer;transition:all .2s;">🏠 BACK TO HOME</button>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="sidebar-right">
+
+    <!-- TIME -->
+    <div class="time-panel">
+      <div style="font-family:var(--font-mono);font-size:.6rem;color:rgba(0,245,255,.4);letter-spacing:2px;margin-bottom:6px;">SYSTEM TIME</div>
+      <div class="time-display" id="clock">00:00:00</div>
+      <div class="date-display" id="datedisp">Loading...</div>
+    </div>
+
+    <!-- VOICE ORB -->
+    <div class="voice-panel">
+      <div class="voice-title">🤖 AI VOICE ASSISTANT</div>
+      <div class="voice-orb" id="voiceOrb" onclick="toggleVoice()">🎙️</div>
+      <div class="voice-bars" id="voiceBars">
+        <div class="vbar"></div><div class="vbar"></div><div class="vbar"></div>
+        <div class="vbar"></div><div class="vbar"></div>
+      </div>
+      <div class="voice-text" id="voiceText">Click orb to activate AI Assistant</div>
+    </div>
+
+    <!-- AI FEED -->
+    <div class="feed-panel">
+      <div class="feed-title"><span class="feed-dot"></span>AI MONITORING FEED</div>
+      <div class="feed-scroll" id="feedScroll">
+        <div class="feed-item"><span class="fi-tag">INFO</span>Satellite data synchronized</div>
+        <div class="feed-item warn"><span class="fi-tag warn">WARN</span>Flood risk elevated — Karnataka</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>AI damage model updated v2.4</div>
+        <div class="feed-item alert"><span class="fi-tag alert">ALERT</span>Seismic activity detected — Zone 4</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>24 reports processed today</div>
+        <div class="feed-item warn"><span class="fi-tag warn">WARN</span>Water level rising — Cauvery basin</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>Rescue teams deployed — 12 zones</div>
+        <div class="feed-item alert"><span class="fi-tag alert">ALERT</span>Emergency broadcast triggered</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>NGO resources allocated</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>Satellite data synchronized</div>
+        <div class="feed-item warn"><span class="fi-tag warn">WARN</span>Flood risk elevated — Karnataka</div>
+        <div class="feed-item"><span class="fi-tag">INFO</span>AI damage model updated v2.4</div>
+      </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div class="weather-panel">
+      <div class="wp-title">⛅ REGIONAL WEATHER</div>
+      <div class="wp-main">
+        <span class="wp-icon">⛈️</span>
+        <div>
+          <div class="wp-temp">28°C</div>
+          <div class="wp-info">Heavy Rain · Humidity 84%</div>
+        </div>
+      </div>
+      <div class="wp-location">📍 Bengaluru, Karnataka</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+setInterval(()=>{rx+=(mx-rx)*.15;ry+=(my-ry)*.15;ring.style.left=rx+'px';ring.style.top=ry+'px';},16);
+
+function playClick(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(660,c.currentTime);o.frequency.exponentialRampToValueAtTime(330,c.currentTime+.08);g.gain.setValueAtTime(.1,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.1);o.start();o.stop(c.currentTime+.1);}catch(e){}}
+document.addEventListener('click',playClick);
+
+// CANVAS
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
+let W,H,pts=[];
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+function mkPts(){pts=[];for(let i=0;i<70;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.4+.4,a:Math.random()});}mkPts();
+function draw(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.a*.35})`;ctx.fill();});pts.forEach((p,i)=>{for(let j=i+1;j<pts.length;j++){const q=pts[j],d=Math.hypot(p.x-q.x,p.y-q.y);if(d<110){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle=`rgba(0,245,255,${(.12*(1-d/110)).toFixed(2)})`;ctx.lineWidth=.5;ctx.stroke();}}});requestAnimationFrame(draw);}draw();
+
+// CLOCK
+function updateClock(){const n=new Date();const t=n.toTimeString().split(' ')[0];document.getElementById('clock').textContent=t;document.getElementById('navTime').textContent=t;const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];document.getElementById('datedisp').textContent=days[n.getDay()]+' '+n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();}
+updateClock();setInterval(updateClock,1000);
+
+// ROLE UPDATE
+const roleMap={govt:{name:'Government Official',tag:'GOV OFFICIAL',color:'linear-gradient(135deg,#0af,#06d)',init:'G'},ngo:{name:'NGO Worker',tag:'NGO WORKER',color:'linear-gradient(135deg,#0f9,#07a)',init:'N'},citizen:{name:'Citizen',tag:'CITIZEN',color:'linear-gradient(135deg,#f9a,#f06)',init:'C'},student:{name:'Student',tag:'STUDENT',color:'linear-gradient(135deg,#af0,#7b0)',init:'S'},rescue:{name:'Rescue Team',tag:'RESCUE TEAM',color:'linear-gradient(135deg,#f60,#d00)',init:'R'},other:{name:'Other User',tag:'GENERAL USER',color:'linear-gradient(135deg,#88f,#44d)',init:'O'}};
+function updateRole(v){if(!v)return;const r=roleMap[v];if(!r)return;document.getElementById('roleName').textContent=r.name;document.getElementById('roleTag').textContent=r.tag;document.getElementById('roleAvatar').textContent=r.init;document.getElementById('roleAvatar').style.background=r.color;document.getElementById('greeting-sub').textContent='Welcome, '+r.name+'. Select a disaster type to report below.';showNotif('✔ Role set: '+r.name);}
+
+// VOICE ORB
+const voiceMsgs=['How may I assist you today?','Scanning for active disasters...','AI systems fully operational.','Flood risk elevated in Zone 3.','Seismic activity being monitored.','Report a disaster to get AI analysis.','Emergency contacts available in Hub.'];
+let voiceActive=false,voiceIdx=0;
+function toggleVoice(){voiceActive=!voiceActive;const orb=document.getElementById('voiceOrb'),bars=document.getElementById('voiceBars'),txt=document.getElementById('voiceText');orb.classList.toggle('active',voiceActive);bars.classList.toggle('active',voiceActive);if(voiceActive){typeText(voiceMsgs[voiceIdx%voiceMsgs.length],txt);voiceIdx++;playVoiceSound();}else{txt.textContent='Click orb to activate AI Assistant';}}
+function typeText(t,el){el.textContent='';let i=0;const iv=setInterval(()=>{el.textContent+=t[i]||'';i++;if(i>=t.length)clearInterval(iv);},40);}
+function playVoiceSound(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(440,c.currentTime);o.frequency.exponentialRampToValueAtTime(660,c.currentTime+.3);g.gain.setValueAtTime(.08,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.4);o.start();o.stop(c.currentTime+.4);}catch(e){}}
+
+// NOTIF
+function showNotif(msg){const wrap=document.getElementById('notifWrap'),n=document.createElement('div');n.className='notif';n.innerHTML='<div class="notif-dot"></div>'+msg;wrap.appendChild(n);setTimeout(()=>n.classList.add('show'),50);setTimeout(()=>{n.classList.remove('show');setTimeout(()=>n.remove(),500);},3200);}
+setTimeout(()=>showNotif('🛰️ Satellite feed synchronized'),1000);
+setTimeout(()=>showNotif('🌊 Flood monitoring active'),3000);
+
+
+function goTo(url){playClick();setTimeout(()=>window.location.href=url,200);}
+</script>
+</body>
+</html>

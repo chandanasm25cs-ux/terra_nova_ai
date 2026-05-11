@@ -1,0 +1,194 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    min-height: 100vh;
+    overflow-x: hidden;
+    
+    background: linear-gradient(
+        -45deg,
+        #0f172a,
+        #1e3a8a,
+        #0ea5e9,
+        #06b6d4
+    );
+
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+
+    color: white;
+}
+
+/* Background Animation */
+@keyframes gradientBG{
+    0%{
+        background-position: 0% 50%;
+    }
+
+    50%{
+        background-position: 100% 50%;
+    }
+
+    100%{
+        background-position: 0% 50%;
+    }
+
+}
+
+/* LOADER */
+
+.loader{
+    position:fixed;
+    width:100%;
+    height:100vh;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+}
+
+/* NAVBAR */
+
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 50px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(10px);
+}
+
+.logo{
+    color:cyan;
+}
+
+.nav-links{
+    display:flex;
+    list-style:none;
+    gap:20px;
+}
+
+.nav-links a{
+    color:white;
+    text-decoration:none;
+}
+
+.signin-btn{
+    padding:10px 20px;
+    background:cyan;
+    border:none;
+    cursor:pointer;
+    border-radius:10px;
+}
+
+/* HERO */
+
+.hero{
+    height:80vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.hero-content h1{
+    font-size:60px;
+    margin-bottom:20px;
+}
+
+.hero-content p{
+    font-size:22px;
+    margin-bottom:20px;
+}
+
+.hero-content button{
+    padding:15px 30px;
+    background:cyan;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+/* CARDS */
+
+.cards-section{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    padding:50px;
+}
+
+.card{
+    width:350px;
+    padding:40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(10px);
+    text-align:center;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-10px);
+}
+
+.card button{
+    margin-top:20px;
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    background:cyan;
+}
+.container{
+    width: 90%;
+    margin: auto;
+    padding-top: 50px;
+}
+
+/* Heading Style */
+h1{
+    font-size: 60px;
+    text-align: center;
+    margin-bottom: 20px;
+
+    text-shadow: 0 0 20px rgba(255,255,255,0.5);
+}
+
+/* Paragraph Style */
+p{
+    text-align: center;
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+/* Stylish Buttons */
+button{
+    padding: 14px 30px;
+    border: none;
+    border-radius: 12px;
+
+    background: cyan;
+    color: black;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+/* Hover Effect */
+button:hover{
+    transform: scale(1.08);
+
+    box-shadow:
+    0 0 15px cyan,
+    0 0 30px cyan;
+}

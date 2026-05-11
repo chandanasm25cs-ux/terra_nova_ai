@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TerraNova AI — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{--cyan:#00f5ff;--amber:#ff6b35;--navy:#0a0e1a;--glass:rgba(0,245,255,0.06);--glow:0 0 20px rgba(0,245,255,0.6);--font-head:'Orbitron',monospace;--font-body:'Exo 2',sans-serif;--font-mono:'Share Tech Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}body{background:var(--navy);color:#e0f7fa;font-family:var(--font-body);min-height:100vh;display:flex;align-items:center;justify-content:center;cursor:none;overflow-x:hidden;}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--cyan);pointer-events:none;z-index:99999;transform:translate(-50%,-50%);box-shadow:0 0 15px var(--cyan);}
+#cursor-ring{position:fixed;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(0,245,255,0.4);pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all .15s;}
+canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+.login-wrap{position:relative;z-index:1;width:min(480px,92vw);padding:20px 0;}
+.brand{text-align:center;margin-bottom:36px;}
+.brand-orb{width:64px;height:64px;border-radius:50%;border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:1.3rem;font-weight:900;color:var(--cyan);box-shadow:var(--glow),0 0 60px rgba(0,245,255,.2);margin:0 auto 14px;animation:orbPulse 2.5s ease-in-out infinite;}
+.brand-name{font-family:var(--font-head);font-size:1.6rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.brand-sub{font-family:var(--font-mono);font-size:.68rem;color:rgba(0,245,255,.5);letter-spacing:3px;margin-top:4px;}
+@keyframes orbPulse{0%,100%{box-shadow:var(--glow),0 0 40px rgba(0,245,255,.15);}50%{box-shadow:0 0 35px rgba(0,245,255,.9),0 0 80px rgba(0,245,255,.3);}}
+
+.card{background:rgba(13,21,38,.85);border:1px solid rgba(0,245,255,.15);border-radius:16px;padding:36px;backdrop-filter:blur(20px);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin-bottom:32px;border:1px solid rgba(0,245,255,.15);border-radius:8px;overflow:hidden;}
+.tab-btn{flex:1;padding:12px;font-family:var(--font-head);font-size:.72rem;font-weight:700;letter-spacing:2px;border:none;cursor:pointer;transition:all .25s;background:transparent;color:rgba(0,245,255,.5);}
+.tab-btn.active{background:linear-gradient(135deg,rgba(0,245,255,.15),rgba(0,245,255,.05));color:var(--cyan);box-shadow:inset 0 0 20px rgba(0,245,255,.05);}
+.tab-btn:hover:not(.active){color:var(--cyan);background:rgba(0,245,255,.04);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* FORM */
+.form-group{margin-bottom:20px;position:relative;}
+.form-label{font-family:var(--font-mono);font-size:.68rem;color:rgba(0,245,255,.7);letter-spacing:2px;display:block;margin-bottom:8px;}
+.form-input{width:100%;padding:12px 16px;background:rgba(0,245,255,.04);border:1px solid rgba(0,245,255,.15);border-radius:6px;color:#e0f7fa;font-family:var(--font-body);font-size:.9rem;outline:none;transition:all .25s;}
+.form-input:focus{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,245,255,.15);background:rgba(0,245,255,.07);}
+.form-input::placeholder{color:rgba(224,247,250,.25);}
+.form-input option{background:#0d1526;color:#e0f7fa;}
+
+/* ROLE GRID */
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.role-option{position:relative;}
+.role-option input{position:absolute;opacity:0;pointer-events:none;}
+.role-label{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(0,245,255,.12);border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:.68rem;color:rgba(224,247,250,.6);transition:all .25s;background:rgba(0,245,255,.02);}
+.role-label:hover{border-color:rgba(0,245,255,.35);color:var(--cyan);}
+.role-option input:checked + .role-label{border-color:var(--cyan);background:rgba(0,245,255,.1);color:var(--cyan);box-shadow:0 0 10px rgba(0,245,255,.15);}
+.role-icon{font-size:1rem;}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--cyan),#0af);color:#000;font-family:var(--font-head);font-size:.8rem;font-weight:700;letter-spacing:3px;border:none;border-radius:6px;cursor:pointer;box-shadow:0 0 30px rgba(0,245,255,.3);transition:all .25s;margin-top:8px;}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(0,245,255,.5);}
+.submit-btn:active{transform:translateY(0);}
+
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:rgba(224,247,250,.2);font-family:var(--font-mono);font-size:.65rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,245,255,.1);}
+
+.social-row{display:flex;gap:10px;}
+.social-btn{flex:1;padding:10px;border:1px solid rgba(0,245,255,.15);border-radius:6px;background:transparent;color:rgba(224,247,250,.6);font-family:var(--font-mono);font-size:.7rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.social-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+.form-footer{text-align:center;margin-top:20px;font-family:var(--font-mono);font-size:.7rem;color:rgba(224,247,250,.4);}
+.form-footer a{color:var(--cyan);text-decoration:none;cursor:pointer;}
+
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(0,245,255,.5);cursor:pointer;font-size:.8rem;margin-top:12px;}
+
+/* STRENGTH BAR */
+.strength-bar{height:2px;border-radius:2px;margin-top:6px;background:rgba(0,245,255,.08);overflow:hidden;}
+.strength-fill{height:100%;width:0;border-radius:2px;transition:all .3s;}
+
+/* NOTIF */
+.notif-wrap{position:fixed;top:20px;right:20px;z-index:900;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.notif{background:rgba(10,14,26,.92);border:1px solid rgba(0,245,255,.25);border-radius:8px;padding:12px 18px;font-family:var(--font-mono);font-size:.72rem;color:var(--cyan);backdrop-filter:blur(12px);transform:translateX(120%);transition:transform .4s;max-width:300px;display:flex;align-items:center;gap:8px;}
+.notif.show{transform:translateX(0);}.notif-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow);flex-shrink:0;}
+
+.back-link{text-align:center;margin-bottom:16px;}<br>
+.back-link a{font-family:var(--font-mono);font-size:.7rem;color:rgba(0,245,255,.5);text-decoration:none;letter-spacing:1px;}
+.back-link a:hover{color:var(--cyan);}
+
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div class="notif-wrap" id="notifWrap"></div>
+<canvas id="bg"></canvas>
+
+<div class="login-wrap">
+  <div class="back-link"><a href="index.html">← BACK TO HOME</a></div>
+  <div class="brand">
+    <div class="brand-orb">TN</div>
+    <div class="brand-name">TerraNova AI</div>
+    <div class="brand-sub">SECURE ACCESS PORTAL</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">LOGIN</button>
+      <button class="tab-btn" onclick="switchTab('signup')">SIGN UP</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="tab-panel active" id="tab-login">
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" placeholder="you@example.com" id="login-email"/>
+      </div>
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">PASSWORD</label>
+        <input class="form-input" type="password" placeholder="Enter your password" id="login-pass"/>
+        <button class="pw-toggle" onclick="togglePw('login-pass',this)">👁</button>
+      </div>
+      <div style="text-align:right;margin-top:-10px;margin-bottom:18px;">
+        <a style="font-family:var(--font-mono);font-size:.65rem;color:rgba(0,245,255,.5);cursor:pointer;">Forgot password?</a>
+      </div>
+      <button class="submit-btn" onclick="handleLogin()">LOGIN TO SYSTEM</button>
+      <div class="divider">OR CONTINUE WITH</div>
+      <div class="social-row">
+        <button class="social-btn">🔷 Google</button>
+        <button class="social-btn">🔵 Microsoft</button>
+      </div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="tab-panel" id="tab-signup">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">FIRST NAME</label>
+          <input class="form-input" type="text" placeholder="First name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">LAST NAME</label>
+          <input class="form-input" type="text" placeholder="Last name"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">USERNAME</label>
+        <input class="form-input" type="text" placeholder="Choose a username"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">EMAIL ADDRESS</label>
+        <input class="form-input" type="email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">PASSWORD</label>
+        <input class="form-input" type="password" placeholder="Create a strong password" id="su-pass" oninput="checkStrength(this.value)"/>
+        <button class="pw-toggle" onclick="togglePw('su-pass',this)">👁</button>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">I AM A —</label>
+        <div class="role-grid">
+          <label class="role-option"><input type="radio" name="role" value="govt" checked/><span class="role-label"><span class="role-icon">🏛️</span>Government Official</span></label>
+          <label class="role-option"><input type="radio" name="role" value="ngo"/><span class="role-label"><span class="role-icon">🤝</span>NGO Worker</span></label>
+          <label class="role-option"><input type="radio" name="role" value="citizen"/><span class="role-label"><span class="role-icon">👤</span>Citizen</span></label>
+          <label class="role-option"><input type="radio" name="role" value="student"/><span class="role-label"><span class="role-icon">🎓</span>Student</span></label>
+          <label class="role-option"><input type="radio" name="role" value="rescuer"/><span class="role-label"><span class="role-icon">🚒</span>Rescue Team</span></label>
+          <label class="role-option"><input type="radio" name="role" value="other"/><span class="role-label"><span class="role-icon">➕</span>Other</span></label>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="handleSignup()">CREATE ACCOUNT</button>
+      <p style="font-family:var(--font-mono);font-size:.65rem;color:rgba(224,247,250,.3);text-align:center;margin-top:14px;">By signing up you agree to our Terms of Service and Privacy Policy</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// CURSOR
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+setInterval(()=>{rx+=(mx-rx)*.15;ry+=(my-ry)*.15;ring.style.left=rx+'px';ring.style.top=ry+'px';},16);
+
+function playClick(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type='sine';o.frequency.setValueAtTime(660,c.currentTime);o.frequency.exponentialRampToValueAtTime(330,c.currentTime+.08);g.gain.setValueAtTime(.1,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.1);o.start();o.stop(c.currentTime+.1);}catch(e){}}
+document.addEventListener('click',playClick);
+
+// CANVAS
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
+let W,H,pts=[];
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
+function mkPts(){pts=[];for(let i=0;i<60;i++)pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,r:Math.random()*1.2+.4,a:Math.random()});}mkPts();
+function draw(){ctx.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(0,245,255,${p.a*.35})`;ctx.fill();});pts.forEach((p,i)=>{for(let j=i+1;j<pts.length;j++){const q=pts[j],d=Math.hypot(p.x-q.x,p.y-q.y);if(d<110){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle=`rgba(0,245,255,${(.12*(1-d/110)).toFixed(2)})`;ctx.lineWidth=.5;ctx.stroke();}}});requestAnimationFrame(draw);}draw();
+
+// TABS
+function switchTab(t){document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['login','signup'][i]===t));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');}
+
+// PASSWORD TOGGLE
+function togglePw(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁':'🙈';}
+
+// PASSWORD STRENGTH
+function checkStrength(v){const f=document.getElementById('strengthFill');let s=0;if(v.length>=8)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;const cols=['#ff2244','#ff6b35','#ffd700','#00f5ff'];const ws=['25%','50%','75%','100%'];f.style.width=v?ws[s-1]||'15%':'0';f.style.background=cols[s-1]||'#ff2244';}
+
+// LOGIN
+function handleLogin(){
+  const e=document.getElementById('login-email').value,p=document.getElementById('login-pass').value;
+  if(!e||!p){showNotif('⚠ Please fill in all fields');return;}
+  showNotif('🔐 Authenticating...');
+  setTimeout(()=>{showNotif('✔ Login successful! Redirecting...');setTimeout(()=>window.location.href='dashboard.html',1200);},1200);
+}
+// SIGNUP
+function handleSignup(){showNotif('🔐 Creating your account...');setTimeout(()=>{showNotif('✔ Account created! Welcome aboard!');setTimeout(()=>window.location.href='dashboard.html',1200);},1500);}
+
+// NOTIF
+function showNotif(msg){const wrap=document.getElementById('notifWrap'),n=document.createElement('div');n.className='notif';n.innerHTML='<div class="notif-dot"></div>'+msg;wrap.appendChild(n);setTimeout(()=>n.classList.add('show'),50);setTimeout(()=>{n.classList.remove('show');setTimeout(()=>n.remove(),500);},3000);}
+</script>
+</body>
+</html>
