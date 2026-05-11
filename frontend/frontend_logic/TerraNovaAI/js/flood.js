@@ -1,3 +1,6 @@
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Flood JS Loaded");
+});
 const floodForm =
     document.getElementById("floodForm");
 
