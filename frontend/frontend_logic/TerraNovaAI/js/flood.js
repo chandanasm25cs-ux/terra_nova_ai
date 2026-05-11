@@ -28,6 +28,7 @@ floodForm.addEventListener("submit", function(e){
     }
 
     alert("Flood Report Submitted Successfully!");
+    window.location.href = "dashboard.html";
 
     floodForm.reset();
 });
